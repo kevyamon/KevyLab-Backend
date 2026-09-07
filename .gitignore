@@ -1,0 +1,32 @@
+# ==============================================================================
+# KEVYLAB BACKEND — FICHIER GITIGNORE OFFICIEL
+# ==============================================================================
+
+# Dépendances Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers d'environnement & secrets (Render / local)
+.env
+.env.*
+*.env
+!.env.example
+
+# Dossier de compilation TypeScript
+dist/
+
+# Fichiers de journaux
+logs/
+*.log
+
+# Rapports de couverture de tests
+coverage/
+.nyc_output/
+
+# Caches des éditeurs & fichiers système
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
