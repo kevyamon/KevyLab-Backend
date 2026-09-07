@@ -199,8 +199,9 @@ export class AuthService {
       // Mode secours / simulation pour tests
       try {
         const parts = idToken.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+        const payloadPart = parts[1];
+        if (parts.length === 3 && payloadPart) {
+          const payload = JSON.parse(Buffer.from(payloadPart, 'base64').toString('utf-8'));
           email = (payload.email || '').toLowerCase().trim();
           firstName = payload.given_name || payload.name || firstName;
           lastName = payload.family_name || lastName;
