@@ -33,6 +33,15 @@ const envSchema = z.object({
   BREVO_SENDER_EMAIL: z.string().email().optional().default('contact@kevylab.com'),
   BREVO_SENDER_NAME: z.string().optional().default('KevyLab'),
 
+  // Service de Stockage Médias Cloudinary
+  CLOUDINARY_CLOUD_NAME: z.string().optional().default(''),
+  CLOUDINARY_API_KEY: z.string().optional().default(''),
+  CLOUDINARY_API_SECRET: z.string().optional().default(''),
+
+  // Authentification Google OAuth 2.0
+  GOOGLE_CLIENT_ID: z.string().optional().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
+
   // Configuration CORS & Origines Autorisées
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:5173')

@@ -86,10 +86,10 @@ export class SubmissionController {
   async changeStatus(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const { status, reason } = req.body;
+      const { status, reason, laureateProfile } = req.body;
       const actorId = req.admin?.id || 'admin';
 
-      const updated = await submissionService.changeStatus(id as string, status, actorId, reason);
+      const updated = await submissionService.changeStatus(id as string, status, actorId, reason, laureateProfile);
       sendSuccess(res, updated);
     } catch (error) {
       next(error);

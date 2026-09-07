@@ -6,6 +6,7 @@ import { submissionController } from '../controllers/submissionController';
 import { contactController } from '../controllers/contactController';
 import { faqController } from '../controllers/faqController';
 import { adminDashboardController } from '../controllers/adminDashboardController';
+import { uploadController } from '../controllers/uploadController';
 import { requireAuth, requirePermission } from '../middlewares/authMiddleware';
 import { authLimiter, submissionLimiter, contactLimiter } from '../middlewares/rateLimiter';
 import { checkIdempotency } from '../utils/idempotency';
@@ -55,6 +56,7 @@ apiRouter.get('/events/:eventId/faqs', faqController.getEventFaqs.bind(faqContro
 // --- 6. Routes Administratives : Authentification ---
 apiRouter.post('/admin/auth/register', authLimiter, authController.register.bind(authController));
 apiRouter.post('/admin/auth/login', authLimiter, authController.login.bind(authController));
+apiRouter.post('/admin/auth/google', authLimiter, authController.loginGoogle.bind(authController));
 apiRouter.post('/admin/auth/refresh', authController.refresh.bind(authController));
 apiRouter.post('/admin/auth/logout', authController.logout.bind(authController));
 apiRouter.get('/admin/auth/me', requireAuth, authController.getMe.bind(authController));
@@ -236,5 +238,17 @@ apiRouter.delete(
   requireAuth,
   requirePermission('events.manage'),
   faqController.deleteFaq.bind(faqController)
+);
+
+// --- 14. Routes Administratives : Médias & Cloudinary ---
+apiRouter.post(
+  '/upload/image',
+  requireAuth,
+  uploadController.uploadImage.bind(uploadController)
+);
+apiRouter.delete(
+  '/upload/image',
+  requireAuth,
+  uploadController.deleteImage.bind(uploadController)
 );
 

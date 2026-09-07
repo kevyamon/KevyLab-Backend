@@ -95,7 +95,14 @@ export class SubmissionService {
     submissionId: string,
     newStatus: SubmissionStatus,
     actorId: string,
-    reason?: string
+    reason?: string,
+    laureateProfile?: {
+      photoUrl?: string;
+      role?: string;
+      distinction?: string;
+      rank?: number;
+      presentationDescription?: string;
+    }
   ): Promise<ISubmission> {
     const submission = await submissionRepository.findById(submissionId);
     if (!submission) {
@@ -107,6 +114,12 @@ export class SubmissionService {
 
     const oldStatus = submission.status;
     submission.status = newStatus;
+    if (laureateProfile) {
+      submission.laureateProfile = {
+        ...submission.laureateProfile,
+        ...laureateProfile
+      };
+    }
     await submission.save();
 
     // Journalisation d'audit
@@ -151,6 +164,19 @@ export class SubmissionService {
           candidateName: submission.candidate.fullName,
           projectTitle: submission.project.title,
           reference: submission.reference
+        },
+        relatedEntityType: 'Submission',
+        relatedEntityId: submission.id
+      });
+    } else if (newStatus === SubmissionStatus.WINNER) {
+      emailService.queueEmail({
+        recipient: submission.candidate.email,
+        templateKey: EmailTemplateKey.SUBMISSION_WINNER,
+        variables: {
+          candidateName: submission.candidate.fullName,
+          projectTitle: submission.project.title,
+          reference: submission.reference,
+          distinction: submission.laureateProfile?.distinction || 'Lauréat Officiel'
         },
         relatedEntityType: 'Submission',
         relatedEntityId: submission.id

@@ -62,6 +62,30 @@ export class AuthController {
   }
 
   /**
+   * Connexion administrateur via Google OAuth 2.0
+   */
+  async loginGoogle(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { idToken, adminPw } = req.body;
+      const result = await authService.loginWithGoogle(idToken, adminPw, req.ip);
+
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: env.JWT_REFRESH_EXPIRATION_DAYS * 24 * 60 * 60 * 1000
+      });
+
+      sendSuccess(res, {
+        user: result.user,
+        accessToken: result.accessToken
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Rafraîchit le jeton d'accès court
    */
   async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {

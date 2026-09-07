@@ -1,4 +1,6 @@
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { AdminUserModel, IAdminUser } from '../models/AdminUser';
 import { AdminRole, AuditAction } from '../types/enums';
 import { AdminTokenPayload } from '../types/api';
@@ -26,12 +28,42 @@ export interface RegisterAdminDTO {
   role?: AdminRole;
 }
 
+const DEFAULT_STAFF_PERMISSIONS = [
+  'submissions.read',
+  'submissions.review',
+  'submissions.change_status',
+  'events.manage',
+  'projects.manage',
+  'emails.send',
+  'contacts.read'
+];
+
+const buildAuthPayload = (admin: IAdminUser) => {
+  const tokenPayload: AdminTokenPayload = {
+    id: admin.id,
+    email: admin.email,
+    role: admin.role,
+    permissions: admin.permissions
+  };
+  return {
+    user: {
+      id: admin.id,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      email: admin.email,
+      role: admin.role,
+      permissions: admin.permissions
+    },
+    accessToken: signAccessToken(tokenPayload),
+    refreshToken: signRefreshToken(tokenPayload)
+  };
+};
+
 export class AuthService {
   /**
    * Enregistre un nouveau compte administrateur en validant obligatoirement la clé maître ADMIN_PW
    */
   async register(dto: RegisterAdminDTO, ipAddress?: string): Promise<{ user: Partial<IAdminUser>; accessToken: string; refreshToken: string }> {
-    // 1. Validation de la clé secrète d'inscription sur Render
     if (!dto.adminPw || dto.adminPw !== env.ADMIN_PW) {
       throw AppError.badRequest(
         ErrorCodes.INVALID_ADMIN_SECRET,
@@ -39,7 +71,6 @@ export class AuthService {
       );
     }
 
-    // 2. Vérification de l'unicité de l'adresse courriel
     const existing = await AdminUserModel.findOne({ email: dto.email.toLowerCase().trim() });
     if (existing) {
       throw AppError.conflict(
@@ -48,23 +79,10 @@ export class AuthService {
       );
     }
 
-    // 3. Hachage sécurisé du mot de passe (coût 12)
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(dto.password, salt);
-
-    // 4. Définition des permissions initiales
     const role = dto.role || AdminRole.ADMIN;
-    const permissions = role === AdminRole.SUPER_ADMIN
-      ? ['*']
-      : [
-          'submissions.read',
-          'submissions.review',
-          'submissions.change_status',
-          'events.manage',
-          'projects.manage',
-          'emails.send',
-          'contacts.read'
-        ];
+    const permissions = role === AdminRole.SUPER_ADMIN ? ['*'] : DEFAULT_STAFF_PERMISSIONS;
 
     const admin = await AdminUserModel.create({
       firstName: dto.firstName.trim(),
@@ -77,7 +95,6 @@ export class AuthService {
       lastLoginAt: new Date()
     });
 
-    // 5. Journalisation d'audit immuable
     await auditRepository.log({
       actorId: admin.id,
       action: AuditAction.ADMIN_CREATED,
@@ -87,28 +104,7 @@ export class AuthService {
       ipAddress
     });
 
-    const tokenPayload: AdminTokenPayload = {
-      id: admin.id,
-      email: admin.email,
-      role: admin.role,
-      permissions: admin.permissions
-    };
-
-    const accessToken = signAccessToken(tokenPayload);
-    const refreshToken = signRefreshToken(tokenPayload);
-
-    return {
-      user: {
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        role: admin.role,
-        permissions: admin.permissions
-      },
-      accessToken,
-      refreshToken
-    };
+    return buildAuthPayload(admin);
   }
 
   /**
@@ -116,17 +112,12 @@ export class AuthService {
    */
   async login(email: string, password: string, ipAddress?: string): Promise<{ user: Partial<IAdminUser>; accessToken: string; refreshToken: string }> {
     const admin = await AdminUserModel.findOne({ email: email.toLowerCase().trim() });
-    if (!admin) {
+    if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) {
       throw AppError.unauthorized('Identifiants d’accès invalides.');
     }
 
     if (!admin.active) {
       throw AppError.forbidden('Ce compte administrateur a été désactivé.');
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.passwordHash);
-    if (!isMatch) {
-      throw AppError.unauthorized('Identifiants d’accès invalides.');
     }
 
     admin.lastLoginAt = new Date();
@@ -140,25 +131,7 @@ export class AuthService {
       ipAddress
     });
 
-    const tokenPayload: AdminTokenPayload = {
-      id: admin.id,
-      email: admin.email,
-      role: admin.role,
-      permissions: admin.permissions
-    };
-
-    return {
-      user: {
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        role: admin.role,
-        permissions: admin.permissions
-      },
-      accessToken: signAccessToken(tokenPayload),
-      refreshToken: signRefreshToken(tokenPayload)
-    };
+    return buildAuthPayload(admin);
   }
 
   /**
@@ -186,6 +159,123 @@ export class AuthService {
     } catch {
       throw AppError.unauthorized('Jeton de rafraîchissement invalide ou expiré.');
     }
+  }
+
+  /**
+   * Authentification administrative via jeton d'identité Google OAuth 2.0
+   */
+  async loginWithGoogle(idToken: string, adminPw?: string, ipAddress?: string): Promise<{ user: Partial<IAdminUser>; accessToken: string; refreshToken: string }> {
+    if (!idToken || typeof idToken !== 'string') {
+      throw AppError.badRequest(
+        ErrorCodes.VALIDATION_ERROR,
+        'Le jeton d’identité Google (idToken) est obligatoire.'
+      );
+    }
+
+    let email = '';
+    let firstName = 'Membre';
+    let lastName = 'Staff';
+
+    // Vérification cryptographique du jeton Google
+    if (env.GOOGLE_CLIENT_ID) {
+      try {
+        const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+        const ticket = await client.verifyIdToken({
+          idToken,
+          audience: env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+          throw AppError.unauthorized('Jeton d’identité Google invalide ou sans adresse email.');
+        }
+        email = payload.email.toLowerCase().trim();
+        firstName = payload.given_name || firstName;
+        lastName = payload.family_name || lastName;
+      } catch (err: any) {
+        if (err instanceof AppError) throw err;
+        throw AppError.unauthorized('Échec de la validation cryptographique du jeton Google.');
+      }
+    } else {
+      // Mode secours / simulation pour tests
+      try {
+        const parts = idToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          email = (payload.email || '').toLowerCase().trim();
+          firstName = payload.given_name || payload.name || firstName;
+          lastName = payload.family_name || lastName;
+        }
+      } catch {
+        // payload non décodable
+      }
+      if (!email) {
+        throw AppError.badRequest(
+          ErrorCodes.VALIDATION_ERROR,
+          'Configuration GOOGLE_CLIENT_ID requise ou jeton Google invalide.'
+        );
+      }
+    }
+
+    // Recherche du compte administrateur correspondant
+    let admin = await AdminUserModel.findOne({ email });
+
+    if (!admin) {
+      if (!adminPw || adminPw !== env.ADMIN_PW) {
+        throw AppError.unauthorized(
+          'Aucun compte administrateur n’est associé à cette adresse Google. Pour enregistrer ce compte, fournissez la clé secrète administrative.'
+        );
+      }
+
+      const randomSecret = crypto.randomBytes(32).toString('hex');
+      const salt = await bcrypt.genSalt(12);
+      const passwordHash = await bcrypt.hash(randomSecret, salt);
+
+      admin = await AdminUserModel.create({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email,
+        passwordHash,
+        role: AdminRole.ADMIN,
+        permissions: [
+          'submissions.read',
+          'submissions.review',
+          'submissions.change_status',
+          'events.manage',
+          'projects.manage',
+          'emails.send',
+          'contacts.read'
+        ],
+        active: true,
+        lastLoginAt: new Date()
+      });
+
+      await auditRepository.log({
+        actorId: admin.id,
+        action: AuditAction.ADMIN_CREATED,
+        entityType: 'AdminUser',
+        entityId: admin.id,
+        metadata: { email: admin.email, provider: 'GOOGLE' },
+        ipAddress
+      });
+    } else {
+      if (!admin.active) {
+        throw AppError.forbidden('Ce compte administrateur a été désactivé.');
+      }
+
+      admin.lastLoginAt = new Date();
+      await admin.save();
+
+      await auditRepository.log({
+        actorId: admin.id,
+        action: AuditAction.ADMIN_LOGIN,
+        entityType: 'AdminUser',
+        entityId: admin.id,
+        metadata: { provider: 'GOOGLE' },
+        ipAddress
+      });
+    }
+
+    return buildAuthPayload(admin);
   }
 }
 
