@@ -17,14 +17,14 @@ export const runStateMachineTests = (): boolean => {
   const assert = (condition: boolean, testName: string) => {
     if (condition) {
       passed++;
-      console.log(`  ✓ ${testName}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${testName}`);
     } else {
       failed++;
-      console.error(`  ✗ ${testName}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${testName}`);
     }
   };
 
-  console.log('🧪 Exécution des tests unitaires : Machine à états des candidatures');
+  console.log('[TEST] Machine à états des candidatures');
 
   // Test 1 : Transitions autorisées
   assert(
@@ -80,7 +80,7 @@ export const runStateMachineTests = (): boolean => {
   }
   assert(rejectedToWinnerThrew, 'validateTransition(REJECTED, WINNER) doit lever une AppError explicite');
 
-  console.log(`📊 Résultat : ${passed} passés, ${failed} échoués.\n`);
+  console.log(`[BILAN] ${passed} passés, ${failed} échoués.\n`);
   return failed === 0;
 };
 

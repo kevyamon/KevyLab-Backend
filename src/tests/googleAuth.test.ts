@@ -18,16 +18,16 @@ const runTests = async () => {
   const { authService } = await import('../services/authService');
   const { AdminUserModel } = await import('../models/AdminUser');
 
-  console.log('🧪 Exécution des tests unitaires : Authentification Google Staff');
+  console.log('[TEST] Authentification Google Staff');
   let passed = 0;
   let failed = 0;
 
   const assert = (condition: boolean, description: string) => {
     if (condition) {
-      console.log(`  ✓ ${description}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${description}`);
       passed++;
     } else {
-      console.error(`  ✗ ÉCHEC : ${description}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${description}`);
       failed++;
     }
   };
@@ -68,7 +68,7 @@ const runTests = async () => {
     assert(err.statusCode === 400, 'Doit renvoyer une erreur 400 pour token malformé');
   }
 
-  console.log(`\n📊 Bilan Google Auth : ${passed} réussis, ${failed} échoués.\n`);
+  console.log(`\n[BILAN] Bilan Google Auth : ${passed} réussis, ${failed} échoués.\n`);
   if (failed > 0) process.exit(1);
 };
 

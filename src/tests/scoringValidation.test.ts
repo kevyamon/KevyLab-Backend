@@ -14,14 +14,14 @@ export const runScoringTests = (): boolean => {
   const assert = (condition: boolean, testName: string) => {
     if (condition) {
       passed++;
-      console.log(`  ✓ ${testName}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${testName}`);
     } else {
       failed++;
-      console.error(`  ✗ ${testName}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${testName}`);
     }
   };
 
-  console.log('🧪 Exécution des tests unitaires : Validation et calcul du Scoring');
+  console.log('[TEST] Validation et calcul du Scoring');
 
   const criteria = [
     { key: 'utility', maxScore: 30 },
@@ -58,7 +58,7 @@ export const runScoringTests = (): boolean => {
   assert(isInvalidScore('originality', -2), 'Un score négatif (-2) doit être rejeté');
   assert(!isInvalidScore('feasibility', 25), 'Un score maximal valide (25/25) doit être accepté');
 
-  console.log(`📊 Résultat : ${passed} passés, ${failed} échoués.\n`);
+  console.log(`[BILAN] ${passed} passés, ${failed} échoués.\n`);
   return failed === 0;
 };
 

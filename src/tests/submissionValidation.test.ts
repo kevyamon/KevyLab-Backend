@@ -39,16 +39,16 @@ const submissionValidationSchema = z.object({
 });
 
 const runTests = () => {
-  console.log('🧪 Exécution des tests unitaires : Validation métier des candidatures');
+  console.log('[TEST] Validation métier des candidatures');
   let passed = 0;
   let failed = 0;
 
   const assert = (condition: boolean, description: string) => {
     if (condition) {
-      console.log(`  ✓ ${description}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${description}`);
       passed++;
     } else {
-      console.error(`  ✗ ÉCHEC : ${description}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${description}`);
       failed++;
     }
   };
@@ -119,7 +119,7 @@ const runTests = () => {
   const featuresResult = submissionValidationSchema.safeParse(emptyFeatures);
   assert(!featuresResult.success, 'Un projet sans fonctionnalités MVP listées doit être refusé');
 
-  console.log(`📊 Résultat : ${passed} passés, ${failed} échoués.\n`);
+  console.log(`[BILAN] ${passed} passés, ${failed} échoués.\n`);
   if (failed > 0) process.exit(1);
 };
 

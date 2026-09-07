@@ -23,7 +23,7 @@ const startServer = async (): Promise<void> => {
         port: env.PORT,
         pid: process.pid
       });
-      console.log(`🚀 Serveur KevyLab opérationnel : http://localhost:${env.PORT}`);
+      console.log(`\x1b[32mServeur KevyLab opérationnel : http://localhost:${env.PORT}\x1b[0m`);
     });
 
     // 3. Gestion de l'arrêt gracieux

@@ -50,7 +50,7 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-  console.error('❌ Échec critique lors de la validation des variables d’environnement :');
+  console.error('\x1b[31m[ERREUR] Échec critique lors de la validation des variables d’environnement :\x1b[0m');
   console.error(parsedEnv.error.format());
   process.exit(1);
   throw new Error('Échec critique de validation des variables d’environnement.');

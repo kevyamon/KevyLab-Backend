@@ -11,16 +11,16 @@ import { EmailTemplateKey } from '../types/enums';
  */
 
 const runTests = () => {
-  console.log('🧪 Exécution des tests unitaires : Résilience et Modèles de Courriels');
+  console.log('[TEST] Résilience et Modèles de Courriels');
   let passed = 0;
   let failed = 0;
 
   const assert = (condition: boolean, description: string) => {
     if (condition) {
-      console.log(`  ✓ ${description}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${description}`);
       passed++;
     } else {
-      console.error(`  ✗ ÉCHEC : ${description}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${description}`);
       failed++;
     }
   };
@@ -63,7 +63,7 @@ const runTests = () => {
   assert(!canRetry(5), 'Un courriel ayant atteint 5 tentatives doit être définitivement bloqué');
   assert(!canRetry(8), 'Un compteur supérieur à 5 doit être formellement rejeté');
 
-  console.log(`📊 Résultat : ${passed} passés, ${failed} échoués.\n`);
+  console.log(`[BILAN] ${passed} passés, ${failed} échoués.\n`);
   if (failed > 0) process.exit(1);
 };
 

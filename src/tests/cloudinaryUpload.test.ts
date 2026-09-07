@@ -19,16 +19,16 @@ process.env.ADMIN_PW = 'test-admin-secret-pwd';
 const runTests = async () => {
   const { CloudinaryService } = await import('../integrations/cloudinary/cloudinaryService');
 
-  console.log('🧪 Exécution des tests unitaires : Service Médias Cloudinary');
+  console.log('[TEST] Service Médias Cloudinary');
   let passed = 0;
   let failed = 0;
 
   const assert = (condition: boolean, description: string) => {
     if (condition) {
-      console.log(`  ✓ ${description}`);
+      console.log(`  \x1b[32m[PASS]\x1b[0m ${description}`);
       passed++;
     } else {
-      console.error(`  ✗ ÉCHEC : ${description}`);
+      console.error(`  \x1b[31m[FAIL]\x1b[0m ${description}`);
       failed++;
     }
   };
@@ -61,7 +61,7 @@ const runTests = async () => {
     assert(false, `La suppression a échoué: ${err.message}`);
   }
 
-  console.log(`\n📊 Bilan Cloudinary : ${passed} réussis, ${failed} échoués.\n`);
+  console.log(`\n[BILAN] Bilan Cloudinary : ${passed} réussis, ${failed} échoués.\n`);
   if (failed > 0) process.exit(1);
 };
 

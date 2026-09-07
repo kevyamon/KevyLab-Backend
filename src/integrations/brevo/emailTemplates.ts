@@ -121,7 +121,7 @@ export const renderEmailTemplate = (
 
     case EmailTemplateKey.SUBMISSION_WINNER:
       return {
-        subject: `[KevyLab] 🏆 Félicitations officielles : Vous êtes Lauréat de l’Appathon ! — ${variables.reference || ''}`,
+        subject: `[KevyLab] Félicitations officielles : Vous êtes Lauréat de l’Appathon ! — ${variables.reference || ''}`,
         html: baseLayout(
           'Félicitations au Lauréat',
           `<h2>Félicitations exceptionnelles ${variables.candidateName || ''} !</h2>

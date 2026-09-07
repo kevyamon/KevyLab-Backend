@@ -15,7 +15,7 @@ import { EventStatus, EventType, ProjectCategory, ProjectStatus } from '../types
 
 const seed = async () => {
   try {
-    console.log('🌱 Amorçage de la base de données KevyLab...');
+    console.log('\x1b[36m[SEED] Amorçage de la base de données KevyLab...\x1b[0m');
     await connectDatabase();
 
     // 1. Initialisation de l'événement Appathon 2026
@@ -35,7 +35,7 @@ const seed = async () => {
         applicationOpenAt: new Date(),
         applicationCloseAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
       });
-      console.log('✅ Événement fondateur Appathon 2026 créé.');
+      console.log('\x1b[32m[OK] Événement fondateur Appathon 2026 créé.\x1b[0m');
     }
 
     // 2. Grille de notation sur 100 points
@@ -83,7 +83,7 @@ const seed = async () => {
           active: true
         }
       ]);
-      console.log('✅ Grille de 5 critères sur 100 points initialisée.');
+      console.log('\x1b[32m[OK] Grille de 5 critères sur 100 points initialisée.\x1b[0m');
     }
 
     // 3. Projets authentiques du laboratoire
@@ -119,12 +119,12 @@ const seed = async () => {
           featured: true
         }
       ]);
-      console.log('✅ Projets initiaux du Lab enregistrés.');
+      console.log('\x1b[32m[OK] Projets initiaux du Lab enregistrés.\x1b[0m');
     }
 
-    console.log('🎉 Amorçage terminé avec succès.');
+    console.log('\x1b[32m[OK] Amorçage terminé avec succès.\x1b[0m');
   } catch (error) {
-    console.error('❌ Échec lors de l’amorçage :', error);
+    console.error('\x1b[31m[ERREUR] Échec lors de l’amorçage :\x1b[0m', error);
   } finally {
     await disconnectDatabase();
   }

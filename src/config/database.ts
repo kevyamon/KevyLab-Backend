@@ -20,10 +20,10 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
 
   try {
     const conn = await mongoose.connect(env.MONGODB_URI, options);
-    console.log(`✅ MongoDB connecté avec succès : ${conn.connection.host}`);
+    console.log(`\x1b[32mMongoDB connecté avec succès : ${conn.connection.host}\x1b[0m`);
     return conn;
   } catch (error) {
-    console.error('❌ Erreur critique lors de la connexion à MongoDB :', error);
+    console.error('\x1b[31m[ERREUR] Erreur critique lors de la connexion à MongoDB :\x1b[0m', error);
     process.exit(1);
     throw error;
   }
@@ -31,11 +31,11 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
 
 // Surveillance des événements de connexion
 mongoose.connection.on('disconnected', () => {
-  console.warn('⚠️ Avertissement : Déconnexion de la base de données MongoDB survenue.');
+  console.warn('\x1b[33m[AVERTISSEMENT] Déconnexion de la base de données MongoDB survenue.\x1b[0m');
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('❌ Erreur de flux de la base de données MongoDB :', err);
+  console.error('\x1b[31m[ERREUR] Erreur de flux de la base de données MongoDB :\x1b[0m', err);
 });
 
 /**
@@ -44,8 +44,8 @@ mongoose.connection.on('error', (err) => {
 export const disconnectDatabase = async (): Promise<void> => {
   try {
     await mongoose.connection.close();
-    console.log('🔒 Connexion MongoDB fermée proprement.');
+    console.log('\x1b[32mConnexion MongoDB fermée proprement.\x1b[0m');
   } catch (error) {
-    console.error('❌ Erreur lors de la fermeture de la connexion MongoDB :', error);
+    console.error('\x1b[31m[ERREUR] Erreur lors de la fermeture de la connexion MongoDB :\x1b[0m', error);
   }
 };
