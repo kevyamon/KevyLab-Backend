@@ -25,6 +25,7 @@ export const connectDatabase = async (): Promise<typeof mongoose> => {
   } catch (error) {
     console.error('❌ Erreur critique lors de la connexion à MongoDB :', error);
     process.exit(1);
+    throw error;
   }
 };
 

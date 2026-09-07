@@ -82,10 +82,7 @@ export class CloudinaryService {
       };
     } catch (error) {
       logger.error('SYSTEM', 'Échec du téléversement vers Cloudinary', error);
-      throw AppError.internal(
-        ErrorCodes.INTERNAL_ERROR,
-        'Une erreur est survenue lors de l’hébergement de l’image.'
-      );
+      throw AppError.internal('Une erreur est survenue lors de l’hébergement de l’image.');
     }
   }
 

@@ -53,10 +53,13 @@ if (!parsedEnv.success) {
   console.error('❌ Échec critique lors de la validation des variables d’environnement :');
   console.error(parsedEnv.error.format());
   process.exit(1);
+  throw new Error('Échec critique de validation des variables d’environnement.');
 }
 
+const validatedEnv = parsedEnv.data;
+
 export const env = {
-  ...parsedEnv.data,
+  ...validatedEnv,
   // Transformation de la liste des origines autorisées en tableau
-  allowedOriginsArray: parsedEnv.data.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
+  allowedOriginsArray: validatedEnv.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
 };
